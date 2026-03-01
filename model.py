@@ -28,7 +28,7 @@ for split in ["train", "test", "val"]:
         class_indices = [i for i, (_, label) in enumerate(dataset.samples) if label == class_idx][:10]
         
         for idx in class_indices:
-            img, _ = dataset[idx]
+            img, label = dataset[idx]
             
             # rows = number of classes
             # cols = 10 images per class
