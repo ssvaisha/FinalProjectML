@@ -1,1 +1,1 @@
-# finalProject_Pnemonia-c19-tb_diagnoser
+# FinalModelML
