@@ -8,7 +8,6 @@ import numpy as np
 from torchvision import datasets, transforms
 from PIL import Image 
 import os
-
 import matplotlib.pyplot as plt
 from torchvision.transforms import v2
 
@@ -24,16 +23,15 @@ transform_eval = transforms.Compose([
 ])
 
 
-for split in ["train", "test", "val"]:   
-    dataset = datasets.ImageFolder(f"archive/{split}", transform=transform)
+for cat in ["train", "test", "val"]:   
+    dataset = datasets.ImageFolder(f"archive/{cat}", transform=transform)
     class_names = dataset.classes
     
     plt.figure(figsize=(20, 12))
     plot_index = 1
     
-    for class_idx, class_name in enumerate(class_names):
-        # Get first 10 images for this class
-        class_indices = [i for i, (_, label) in enumerate(dataset.samples) if label == class_idx][:25]
+    for class_index, class_name in enumerate(class_names):
+        class_indices = [i for i, (_, label) in enumerate(dataset.samples) if label == class_index][:25]
         
         for idx in class_indices:
             img, label = dataset[idx]
@@ -42,7 +40,7 @@ for split in ["train", "test", "val"]:
             # cols = 10 images per class
             plt.subplot(len(class_names), 25, plot_index)
             plt.imshow(img.permute(1, 2, 0))
-            plt.title(split)
+            plt.title(cat)
             #this is to label the y values so its like a bar chart
             if plot_index % 25 == 1:
                 plt.ylabel(class_name, fontsize=12)
@@ -57,16 +55,13 @@ for split in ["train", "test", "val"]:
 
 #data analysis
 train_dataset = datasets.ImageFolder("archive/train")
-test_dataset = datasets.ImageFolder("archive/test")
-val_dataset= datasets.ImageFolder("archive/val")
-class_types = ['COVID19', 'NORMAL','PNEUMONIA','TURBERCULOSIS']
 
 amount_data = {}
-for class_name in train_dataset.classes:
-    class_dir = os.path.join('archive/train',class_name)
-    count = len([folder_name for folder_name in os.listdir(class_dir) if os.path.isfile(os.path.join(class_dir,folder_name))])
+for class_type in train_dataset.classes:
+    class_directive = os.path.join('archive/train',class_type)
+    count = len([folder_name for folder_name in os.listdir(class_directive) if os.path.isfile(os.path.join(class_directive,folder_name))])
     
-    amount_data[str(class_name)] = count
+    amount_data[str(class_type)] = count
 
 
 
