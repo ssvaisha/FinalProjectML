@@ -10,10 +10,12 @@ from PIL import Image
 import os
 
 import matplotlib.pyplot as plt
-from torchvision import datasets, transforms
+from torchvision.transforms import v2
 
-transform = transforms.Compose([
-    transforms.Resize((100,100)),transforms.ToTensor()])
+transform = transforms.Compose([transforms.ToTensor(),v2.Resize((100,100)),
+                        transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
+                        transforms.RandomHorizontalFlip(0.15),
+                        ])
 
 for split in ["train", "test", "val"]:   
     dataset = datasets.ImageFolder(f"archive/{split}", transform=transform)
