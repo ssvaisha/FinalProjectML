@@ -124,3 +124,10 @@ class ConvModel(nn.Module):
         x = self.relu(self.fc1(x))
         output = self.fc2(x)
         return output
+
+model = ConvModel()
+model.train()
+NUM_Epoch = 100
+for trian_inputs, train_outputs in train_loader:
+    trian_pred = model(train_inputs)
+
