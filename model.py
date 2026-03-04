@@ -11,14 +11,14 @@ import os
 import matplotlib.pyplot as plt
 from torchvision.transforms import v2
 
-transform = transforms.Compose([transforms.ToTensor(),v2.Resize((100,100)),
+transform = transforms.Compose([transforms.ToTensor(),v2.Resize((224,224)),
                         transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
                         transforms.RandomHorizontalFlip(0.15),
                         ])
 
 transform_eval = transforms.Compose([
     transforms.ToTensor(),
-    v2.Resize((100,100)),
+    v2.Resize((224,224)),
     transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
 ])
 
@@ -100,3 +100,27 @@ def print_one_batch(loader, split_name):
 print_one_batch(train_loader, "TRAIN")
 print_one_batch(val_loader, "VAL")
 print_one_batch(test_loader, "TEST")
+
+
+class ConvModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3,6,3,1,1)
+        self.conv2 = nn.Conv2d(6,16,3,1,1)
+        self.conv3 = nn.Conv2d(16,48,3,1,1)
+        self.pool = nn.MaxPool2d(2,2)
+        self.relu = nn.ReLU()
+        self.fc1 = nn.Linear(37632,1000)
+        self.fc2 = nn.Linear(1000,4)
+
+    def foward(self,x):
+        x = self.relu(self.conv1(x))
+        x = self.pool(x)
+        x = self.relu(self.conv2(x))
+        x = self.pool(x)
+        x = self.relu(self.conv3(x))
+        x = self.pool(x)
+        x = x.flatten(start_dim =1)
+        x = self.relu(self.fc1(x))
+        output = self.fc2(x)
+        return output
