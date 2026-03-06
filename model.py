@@ -77,15 +77,7 @@ ax.set_xlabel("type of data")
 
 plt.show()
 
-train_dataset = datasets.ImageFolder("archive/train", transform=transform)
-val_dataset   = datasets.ImageFolder("archive/val",   transform=transform_eval)
-test_dataset  = datasets.ImageFolder("archive/test",  transform=transform_eval)
 
-# Creating DataLoaders
-batch_size = 32
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader   = DataLoader(val_dataset,   batch_size=batch_size, shuffle=False)
-test_loader  = DataLoader(test_dataset,  batch_size=batch_size, shuffle=False)
 
 # Looping over each DataLoader
 def print_one_batch(loader, split_name):
@@ -101,6 +93,29 @@ print_one_batch(train_loader, "TRAIN")
 print_one_batch(val_loader, "VAL")
 print_one_batch(test_loader, "TEST")
 
+class MyData(Dataset):
+    def __init__(self, inputs, outputs):
+        super().__init__()
+        self.inputs = inputs
+        self.outputs = outputs
+        self.length = len(inputs)
+
+    def __len__(self):
+        return len(self.inputs)
+    
+    def __getitem__(self,idx):
+        return self.inputs[idx], self.outputs[idx]
+
+
+train_dataset = MyData(datasets.ImageFolder("archive/train", transform=transform))
+val_dataset   = MyData(datasets.ImageFolder("archive/val",   transform=transform_eval))
+test_dataset  = MyData(datasets.ImageFolder("archive/test",  transform=transform_eval))
+
+# Creating DataLoaders
+batch_size = 32
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader   = DataLoader(val_dataset,   batch_size=batch_size, shuffle=False)
+test_loader  = DataLoader(test_dataset,  batch_size=batch_size, shuffle=False)
 
 class ConvModel(nn.Module):
     def __init__(self):
@@ -130,6 +145,7 @@ model.train()
 NUM_Epoch = 100
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 loss_fn = nn.CrossEntropyLoss()
+
 for epoch in range(NUM_Epoch):
     for train_inputs, train_outputs in train_loader:
         model.train()
