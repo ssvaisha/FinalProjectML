@@ -129,7 +129,7 @@ class ConvModel(nn.Module):
         self.fc2 = nn.Linear(1000,4)
         self.flatten = nn.Flatten()
 
-    def foward(self,x):
+    def forward(self,x):
         x = self.relu(self.conv1(x))
         x = self.pool(x)
         x = self.relu(self.conv2(x))
@@ -144,7 +144,7 @@ class ConvModel(nn.Module):
 model = ConvModel()
 model.train()
 NUM_Epoch = 100
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.CrossEntropyLoss()
 
 for epoch in range(NUM_Epoch):
