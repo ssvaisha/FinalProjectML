@@ -127,6 +127,7 @@ class ConvModel(nn.Module):
         self.relu = nn.ReLU()
         self.fc1 = nn.Linear(37632,1000)
         self.fc2 = nn.Linear(1000,4)
+        self.flatten = nn.Flatten()
 
     def foward(self,x):
         x = self.relu(self.conv1(x))
