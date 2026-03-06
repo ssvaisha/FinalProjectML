@@ -89,9 +89,7 @@ def print_one_batch(loader, split_name):
         print("first image first 10 pixel values:", inputs[0].flatten()[:10].tolist())
         break 
 
-print_one_batch(train_loader, "TRAIN")
-print_one_batch(val_loader, "VAL")
-print_one_batch(test_loader, "TEST")
+
 
 class MyData(Dataset):
     def __init__(self, inputs, outputs):
@@ -116,6 +114,10 @@ batch_size = 32
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_loader   = DataLoader(val_dataset,   batch_size=batch_size, shuffle=False)
 test_loader  = DataLoader(test_dataset,  batch_size=batch_size, shuffle=False)
+
+print_one_batch(train_loader, "TRAIN")
+print_one_batch(val_loader, "VAL")
+print_one_batch(test_loader, "TEST")
 
 class ConvModel(nn.Module):
     def __init__(self):
