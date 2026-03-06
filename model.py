@@ -128,6 +128,16 @@ class ConvModel(nn.Module):
 model = ConvModel()
 model.train()
 NUM_Epoch = 100
-for trian_inputs, train_outputs in train_loader:
-    trian_pred = model(train_inputs)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+loss_fn = nn.CrossEntropyLoss()
+for epoch in range(NUM_Epoch):
+    for train_inputs, train_outputs in train_loader:
+        model.train()
+        train_preds = model(train_inputs)
+        loss = loss_fn(train_preds,train_outputs)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        print(f"Training Epoch: {epoch}")
 
