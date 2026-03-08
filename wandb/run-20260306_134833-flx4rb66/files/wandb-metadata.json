@@ -1,0 +1,17 @@
+{
+  "os": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "python": "CPython 3.13.1",
+  "startedAt": "2026-03-06T21:48:33.931249Z",
+  "program": "/Users/divyamachiraju/Desktop/CMPM17/FinalProjectML/wand.py",
+  "codePath": "wand.py",
+  "codePathLocal": "wand.py",
+  "git": {
+    "remote": "https://github.com/ssvaisha/FinalProjectML.git",
+    "commit": "dad468377bf3d7a6fe31124c787499452049fac7"
+  },
+  "email": "ammachir@ucsc.edu",
+  "root": "/Users/divyamachiraju/Desktop/CMPM17/FinalProjectML",
+  "host": "eduroam-169-233-144-169.ucsc.edu",
+  "executable": "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+  "writerId": "b34kb8zytv4kccrrq1ql6xsi7f90twrt"
+}
