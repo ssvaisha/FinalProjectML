@@ -46,7 +46,9 @@ for cat in ["train", "test", "val"]:
             # rows = number of classes
             # cols = 25 images per class
             plt.subplot(len(class_names), 25, plot_index)
-            plt.imshow(img.permute(1, 2, 0))
+            plt.imshow(img.permute(1, 2, 0).clamp(0, 1)) 
+            #we added .clamp because it forces every pixel to stay in between 0 and 1 
+            #because it was showing an error while plotting in matplot when running the code
             plt.title(cat)
             #this is to label the y values so its like a bar chart
             if plot_index % 25 == 1:
@@ -151,7 +153,7 @@ class ConvModel(nn.Module):
 
 model = ConvModel()
 
-NUM_Epoch = 20
+NUM_Epoch = 3
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.CrossEntropyLoss()
 
