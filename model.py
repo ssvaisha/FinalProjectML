@@ -11,13 +11,13 @@ import os
 from torchvision.transforms import v2
 
 transform = transforms.Compose([
-                        transforms.ToTensor(),
-                        v2.Resize((224,224)),
-                        transforms.ColorJitter(brightness=0.2, contrast=0.2),   
-                        transforms.GaussianBlur(kernel_size=3),                 
-                        transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
-                        transforms.RandomHorizontalFlip(0.15),
-                        ])
+    transforms.ToTensor(),
+    v2.Resize((224,224)),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2),   
+    transforms.GaussianBlur(kernel_size=3),                 
+    transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
+    transforms.RandomHorizontalFlip(0.15),
+    ])
 
 transform_eval = transforms.Compose([
     transforms.ToTensor(),
@@ -64,7 +64,10 @@ amount_data = {}
 for class_type in train_dataset.classes:
     class_directive = os.path.join('archive/train',class_type)
 
-    count = len([folder_name for folder_name in os.listdir(class_directive) if os.path.isfile(os.path.join(class_directive,folder_name))])
+    count = len([
+        folder_name for folder_name in os.listdir(class_directive) 
+        if os.path.isfile(os.path.join(class_directive,folder_name))
+    ])
     
     amount_data[str(class_type)] = count
 
@@ -92,29 +95,15 @@ def print_one_batch(loader, split_name):
         break 
 
 
-class MyData(Dataset):
-    def __init__(self, inputs, outputs):
-        super().__init__()
-        self.inputs = inputs
-        self.outputs = outputs
-        self.length = len(inputs)
-
-    def __len__(self):
-        return len(self.inputs)
-    
-    def __getitem__(self,idx):
-        return self.inputs[idx], self.outputs[idx]
-
-
-train_dataset = MyData(datasets.ImageFolder("archive/train", transform=transform))
-val_dataset   = MyData(datasets.ImageFolder("archive/val",   transform=transform_eval))
-test_dataset  = MyData(datasets.ImageFolder("archive/test",  transform=transform_eval))
+train_dataset = datasets.ImageFolder("archive/train", transform=transform)
+val_dataset   = datasets.ImageFolder("archive/val",   transform=transform_eval)
+test_dataset  = datasets.ImageFolder("archive/test",  transform=transform_eval)
 
 # Creating DataLoaders
 batch_size = 32
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader   = DataLoader(val_dataset,   batch_size=batch_size, shuffle=False)
-test_loader  = DataLoader(test_dataset,  batch_size=batch_size, shuffle=False)
+val_loader   = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+test_loader  = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 print_one_batch(train_loader, "TRAIN")
 print_one_batch(val_loader, "VAL")
@@ -177,11 +166,10 @@ for epoch in range(NUM_Epoch):
     model.eval()
     correct = 0
     total = 0
-
     for val_inputs, val_outputs in val_loader:
         val_preds = model(val_inputs)
         max_value, predicted = torch.max(val_preds,1)
-        
+
         total += val_outputs.size(0)
         correct += (predicted == val_outputs).sum().item()
 
