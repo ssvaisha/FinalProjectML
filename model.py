@@ -25,9 +25,13 @@ transform_eval = transforms.Compose([
     transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
 ])
 
+transform_show = transforms.Compose([
+    transforms.ToTensor(),
+    v2.Resize((224,224)),
+])
 
 for cat in ["train", "test", "val"]:   
-    dataset = datasets.ImageFolder(f"archive/{cat}", transform=transform)
+    dataset = datasets.ImageFolder(f"archive/{cat}", transform=transform_show)
     class_names = dataset.classes
     
     plt.figure(figsize=(20, 12))
