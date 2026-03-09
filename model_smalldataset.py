@@ -158,6 +158,15 @@ class ConvModel(nn.Module):
 
 model = ConvModel()
 
+if torch.cuda.is_availible():
+    device = 'cuda'
+    print(f"cuda is available. using gpu.")
+
+else:
+    device ='cpu'
+    model.to(device)
+
+
 NUM_Epoch = 3
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.CrossEntropyLoss()

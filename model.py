@@ -11,6 +11,7 @@ import os
 from torchvision.transforms import v2
 
 
+
 transform = transforms.Compose([transforms.ToTensor(),v2.Resize((224,224)),
                         transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
                         transforms.RandomHorizontalFlip(0.15),
@@ -157,6 +158,14 @@ class ConvModel(nn.Module):
         return output
 
 model = ConvModel()
+
+if torch.cuda.is_availible():
+    device = 'cuda'
+    print(f"cuda is available. using gpu.")
+
+else:
+    device ='cpu'
+    model.to(device)
 
 NUM_Epoch = 3
 optimizer = optim.Adam(model.parameters(), lr=0.001)
