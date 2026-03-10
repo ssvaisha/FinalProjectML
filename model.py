@@ -25,13 +25,11 @@ if torch.cuda.is_available():
 
 if torch.cuda.is_available():
     device = 'cuda'
-    print(f"cuda is available. using gpu.")
+    print("cuda is available. using gpu.")
 
 else:
     device ='cpu'
-    model.to(device)
-
-DATA_ROOT = "archive_smallset"
+    print("cuda not available. using cpu.")
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -54,7 +52,7 @@ transform_show = transforms.Compose([
 ])
 
 for cat in ["train", "test", "val"]:   
-    dataset = datasets.ImageFolder(f"archive/{cat}", transform=transform_show)
+    dataset = datasets.ImageFolder(f"archive_smallset/{cat}", transform=transform_show)
     class_names = dataset.classes
     
     plt.figure(figsize=(20, 12))
@@ -86,12 +84,12 @@ for cat in ["train", "test", "val"]:
     plt.show()
 
 #data analysis
-train_dataset = datasets.ImageFolder("archive/train")
+train_dataset = datasets.ImageFolder("archive_smallset/train")
 
 amount_data = {}
 
 for class_type in train_dataset.classes:
-    class_directive = os.path.join('archive/train',class_type)
+    class_directive = os.path.join('archive_smallset/train',class_type)
 
     count = len([
         folder_name for folder_name in os.listdir(class_directive) 
@@ -124,9 +122,9 @@ def print_one_batch(loader, split_name):
         break 
 
 
-train_dataset = datasets.ImageFolder("archive/train", transform=transform)
-val_dataset   = datasets.ImageFolder("archive/val",   transform=transform_eval)
-test_dataset  = datasets.ImageFolder("archive/test",  transform=transform_eval)
+train_dataset = datasets.ImageFolder("archive_smallset/train", transform=transform)
+val_dataset   = datasets.ImageFolder("archive_smallset/val",   transform=transform_eval)
+test_dataset  = datasets.ImageFolder("archive_smallset/test",  transform=transform_eval)
 
 # Creating DataLoaders
 batch_size = 32
@@ -216,7 +214,7 @@ for epoch in range(NUM_Epoch):
     with torch.no_grad():
         for val_inputs, val_outputs in val_loader:
             val_inputs = val_inputs.to(device)
-            al_outputs = val_outputs.to(device)
+            val_outputs = val_outputs.to(device)
 
             val_preds = model(val_inputs)
             loss = loss_fn(val_preds, val_outputs)
@@ -252,11 +250,14 @@ with torch.no_grad():
 
         test_preds = model(test_inputs)
         loss = loss_fn(test_preds, test_outputs)
-        test_loss += loss.item()
+        test_loss += loss.item() * test_inputs.size(0)
 
         max_value, predicted = torch.max(test_preds,1)
         total += test_outputs.size(0)
         correct += (predicted == test_outputs).sum().item()
+
+        alltest_labels.extend(test_outputs.cpu().tolist())
+        alltest_preds.extend(predicted.cpu().tolist())
 
 test_accuracy = correct / total
 avgtest_loss = test_loss / total
