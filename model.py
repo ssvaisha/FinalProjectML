@@ -268,6 +268,24 @@ print(f"Test Loss: {avgtest_loss}")
 print(f"Weighted F1 Score: {test_f1}")
 
 cm = confusion_matrix(alltest_labels, alltest_preds)
+vt = np.array(cm)
+#covid-19 percision and recall calculations
+recall_covid = (vt[0][0]/(vt[0][1]+vt[0][0]))
+percision_covid = (vt[0][0]/(vt[0][0]+vt[0][2]+vt[0][3]))
+
+#pnemonia percision and recall
+recall_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][1]))
+percision_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][0]+vt[2][3]))
+
+#tb recall and percision
+recall_tb = ((vt[3][3])/(vt[3][3]+vt[3][2]))
+percision_tb = (vt[3][3]/(vt[3][3]+vt[3][2]+ vt[3][0]))
+
+print(f"Recall and Percision Scores Per Catagory")
+print(f"Pnemonia: Recall:{recall_pnemonia} | Percision:{percision_pnemonia}")
+print(f"Covid: Recall:{recall_covid} | Percision:{percision_covid}")
+print(f"Turberculosis: Recall:{recall_tb} | Percision:{percision_tb}")
+
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=test_dataset.classes)
 disp.plot(cmap="Blues", values_format="d")
 plt.title("Confusion Matrix")
