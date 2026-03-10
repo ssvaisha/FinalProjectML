@@ -1,21 +1,38 @@
+import os
+import random
 import pandas as pd
+import numpy as np
+from PIL import Image 
+import matplotlib.pyplot as plt
+
+import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
-import torch
-import matplotlib.pyplot as plt
-import numpy as np
-from torchvision import datasets, transforms
-from PIL import Image 
-import os
 from torchvision.transforms import v2
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, Dataset
+
+from sklearn.metrics import f1_score, confusion_matrix, ConfusionMatrixDisplay, classification_report
+
+#like we used seed in midterm
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(SEED)
 
 
+if torch.cuda.is_available():
+    device = 'cuda'
+    print(f"cuda is available. using gpu.")
 
-transform = transforms.Compose([transforms.ToTensor(),v2.Resize((224,224)),
-                        transforms.Normalize(mean=[0.5,0.5,0.5], std=[0.5,0.5,0.5]),
-                        transforms.RandomHorizontalFlip(0.15),
-                        ])
+else:
+    device ='cpu'
+    model.to(device)
+
+DATA_ROOT = "archive_smallset"
+
 transform = transforms.Compose([
     transforms.ToTensor(),
     v2.Resize((224,224)),
@@ -157,57 +174,120 @@ class ConvModel(nn.Module):
 
         return output
 
-model = ConvModel()
-
-if torch.cuda.is_availible():
-    device = 'cuda'
-    print(f"cuda is available. using gpu.")
-
-else:
-    device ='cpu'
-    model.to(device)
+model = ConvModel().to(device)
 
 NUM_Epoch = 3
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.CrossEntropyLoss()
 
+train_losses = []
+val_losses = []
+val_accuracies = []
+
 #training loop
 for epoch in range(NUM_Epoch):
     model.train()
+    running_train_loss = 0.0
+    train_total = 0
+
     for train_inputs, train_outputs in train_loader:
+        train_inputs = train_inputs.to(device)
+        train_outputs = train_outputs.to(device)
+
         train_preds = model(train_inputs)
         loss = loss_fn(train_preds,train_outputs)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    
+
+        running_train_loss += loss.item() * train_inputs.size(0)
+        train_total += train_inputs.size(0)
+
+    avg_train_loss = running_train_loss / train_total
+    train_losses.append(avg_train_loss) 
+
     #validation
     model.eval()
     correct = 0
     total = 0
-    for val_inputs, val_outputs in val_loader:
-        val_preds = model(val_inputs)
-        max_value, predicted = torch.max(val_preds,1)
+    running_val_loss = 0.0
 
-        total += val_outputs.size(0)
-        correct += (predicted == val_outputs).sum().item()
+    with torch.no_grad():
+        for val_inputs, val_outputs in val_loader:
+            val_inputs = val_inputs.to(device)
+            al_outputs = val_outputs.to(device)
+
+            val_preds = model(val_inputs)
+            loss = loss_fn(val_preds, val_outputs)
+            running_val_loss += loss.item() * val_inputs.size(0)
+
+            max_value, predicted = torch.max(val_preds,1)
+
+            total += val_outputs.size(0)
+            correct += (predicted == val_outputs).sum().item()
 
     val_accuracy = correct/total
+    avg_val_loss = running_val_loss / total
 
+    val_losses.append(avg_val_loss)
+    val_accuracies.append(val_accuracy)
+
+    print(f"Epoch {epoch} Train Loss: {avg_train_loss}")
+    print(f"Epoch {epoch} Validation Loss: {avg_val_loss}")
     print(f"Epoch {epoch} Validation Accuracy: {val_accuracy}")
 
 #testing
 model.eval()
 correct = 0
 total = 0
+test_loss = 0.0
+alltest_labels = []
+alltest_preds = []
 
-for test_inputs, test_outputs in test_loader:
-    test_preds = model(test_inputs)
-    max_value, predicted = torch.max(test_preds,1)
-    total += test_outputs.size(0)
-    correct += (predicted == test_outputs).sum().item()
+with torch.no_grad():
+    for test_inputs, test_outputs in test_loader:
+        test_inputs = test_inputs.to(device)
+        test_outputs = test_outputs.to(device)
+
+        test_preds = model(test_inputs)
+        loss = loss_fn(test_preds, test_outputs)
+        test_loss += loss.item()
+
+        max_value, predicted = torch.max(test_preds,1)
+        total += test_outputs.size(0)
+        correct += (predicted == test_outputs).sum().item()
 
 test_accuracy = correct / total
+avgtest_loss = test_loss / total
+test_f1 = f1_score(alltest_labels, alltest_preds, average="weighted")
 
 print(f"Test Accuracy: {test_accuracy}")
+print(f"Test Loss: {avgtest_loss}")
+print(f"Weighted F1 Score: {test_f1}")
+
+cm = confusion_matrix(alltest_labels, alltest_preds)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=test_dataset.classes)
+disp.plot(cmap="Blues", values_format="d")
+plt.title("Confusion Matrix")
+plt.show()
+
+epochs = range(NUM_Epoch)
+
+plt.figure(figsize=(8, 5))
+plt.plot(epochs, train_losses, marker="o", label="Train Loss")
+plt.plot(epochs, val_losses, marker="o", label="Validation Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("Train and Validation Loss")
+plt.legend()
+plt.show()
+
+
+plt.figure(figsize=(8, 5))
+plt.plot(epochs, val_accuracies, marker="o", label="Validation Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Validation Accuracy")
+plt.legend()
+plt.show()
