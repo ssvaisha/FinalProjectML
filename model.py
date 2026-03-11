@@ -270,7 +270,7 @@ print(f"Weighted F1 Score: {test_f1}")
 cm = confusion_matrix(alltest_labels, alltest_preds)
 vt = np.array(cm)
 #covid-19 percision and recall calculations
-recall_covid = (vt[0][0]/(vt[0][1]+vt[0][0]))
+recall_covid = (vt[0][0]/(vt[0][0]+vt[0][1]))
 percision_covid = (vt[0][0]/(vt[0][0]+vt[0][2]+vt[0][3]))
 
 #pnemonia percision and recall
@@ -279,7 +279,7 @@ percision_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][0]+vt[2][3]))
 
 #tb recall and percision
 recall_tb = ((vt[3][3])/(vt[3][3]+vt[3][2]))
-percision_tb = (vt[3][3]/(vt[3][3]+vt[3][2]+ vt[3][0]))
+percision_tb = (vt[3][3]/(vt[3][3]+vt[3][0]+ vt[3][1]))
 
 print(f"Recall and Percision Scores Per Catagory")
 print(f"Pnemonia: Recall:{recall_pnemonia} | Percision:{percision_pnemonia}")
