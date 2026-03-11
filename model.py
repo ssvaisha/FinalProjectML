@@ -269,22 +269,30 @@ print(f"Weighted F1 Score: {test_f1}")
 
 cm = confusion_matrix(alltest_labels, alltest_preds)
 vt = np.array(cm)
+print(vt)
 #covid-19 percision and recall calculations
-recall_covid = (vt[0][0]/(vt[0][0]+vt[0][1]))
-percision_covid = (vt[0][0]/(vt[0][0]+vt[0][2]+vt[0][3]))
+# recall_covid = (vt[0][0]/(vt[0][0]+vt[0][1]))
+# percision_covid = (vt[0][0]/(vt[0][0]+vt[0][2]+vt[0][3]))
 
-#pnemonia percision and recall
-recall_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][1]))
-percision_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][0]+vt[2][3]))
+# #pnemonia percision and recall
+# recall_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][1]))
+# percision_pnemonia = (vt[2][2]/(vt[2][2]+vt[2][0]+vt[2][3]))
 
-#tb recall and percision
-recall_tb = ((vt[3][3])/(vt[3][3]+vt[3][2]))
-percision_tb = (vt[3][3]/(vt[3][3]+vt[3][0]+ vt[3][1]))
+# #tb recall and percision
+# recall_tb = ((vt[3][3])/(vt[3][3]+vt[3][2]))
+# percision_tb = (vt[3][3]/(vt[3][3]+vt[3][0]+ vt[3][1]))
 
-print(f"Recall and Percision Scores Per Catagory")
-print(f"Pnemonia: Recall:{recall_pnemonia} | Percision:{percision_pnemonia}")
-print(f"Covid: Recall:{recall_covid} | Percision:{percision_covid}")
-print(f"Turberculosis: Recall:{recall_tb} | Percision:{percision_tb}")
+classes = ["COVID19","NORMAL","PNEUMONIA","TUBERCULOSIS"]
+for i, label in enumerate(classes):
+    tp = vt[i,i]
+    fp = vt[:,i].sum()-tp
+    fn = vt[i,:].sum()-tp
+
+    precision = tp/(tp+fp)
+    recall = tp/(tp+fn)
+
+    print(f"{label}: Precision: {precision} | Recall: {recall}")
+
 
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=test_dataset.classes)
 disp.plot(cmap="Blues", values_format="d")
