@@ -191,7 +191,7 @@ class ConvModel(nn.Module):
 model = ConvModel().to(device)
 
 #after three epochs we notice training loss goes down but validation loss does not indicating overfitting after 3 epochs
-NUM_Epoch = 5
+NUM_Epoch = 3
 #we choice optimizer Adam and learning rate of 0.001 (standard recommended)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 #cross entropy loss because binary wouldn't work for 4 catagories and MSE or RMSE are for regression
