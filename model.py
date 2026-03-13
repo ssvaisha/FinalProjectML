@@ -11,7 +11,7 @@ import torch.optim as optim
 from torchvision.transforms import v2
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Dataset
-import torch.optim.lr_scheduler.ExponentialLR as ExpLR
+from torch.optim.lr_scheduler import ExponentialLR as ExpLR
 
 from sklearn.metrics import f1_score, confusion_matrix, ConfusionMatrixDisplay, classification_report
 
@@ -150,19 +150,19 @@ class ConvModel(nn.Module):
         super().__init__()
         #start with three convolution layers. Images are 3x1x1. we start at 3 frames and end at 6
         self.conv1 = nn.Conv2d(3,6,3,1,1)
-        batchNorm1 = nn.BatchNorm2d(6)
+        
         #go from 6 frames to 16
         self.conv2 = nn.Conv2d(6,16,3,1,1)
-        batchNorm2 = nn.BatchNorm2d(16)
+        
         #16 to 48 frames
         self.conv3 = nn.Conv2d(16,48,3,1,1)
-        batchNorm3 = nn.BatchNorm2d(48)
-
+        
+        
         self.pool = nn.MaxPool2d(2,2)
         #activation function of choice is ReLU
         self.relu = nn.ReLU()
 
-        #now our linear layers which take 48 * 224 *224 (48 frames from the convolutional layers times pixel length and width of image)
+        #now our linear layers which take 48 * 28 *28 (48 frames from the convolutional layers times pixel length and width of image after maxpool)
         self.fc1 = nn.Linear(37632,1000)
         #drop out drops some of our data to prevent overfitting
         self.dropout = nn.Dropout(0.3)
@@ -175,16 +175,18 @@ class ConvModel(nn.Module):
     def forward(self,x):
         #after each convolutional layer we pass it through relu and then pool the value
         x = self.relu(self.conv1(x))
-        x = batchNorm1(x)
+       
         x = self.pool(x)
 
         x = self.relu(self.conv2(x))
-        x = batchNorm2(x)
+       
         x = self.pool(x)
         
         x = self.relu(self.conv3(x))
-        x = batchNorm3(x)
+        
         x = self.pool(x)
+
+    
         #the we flatten our 2d data to 1d
         x = x.flatten(start_dim =1)
         #we put the first linear layer through relu and then drop out some values
@@ -200,8 +202,8 @@ model = ConvModel().to(device)
 #after three epochs we notice training loss goes down but validation loss does not indicating overfitting after 3 epochs
 NUM_Epoch = 3
 #we choice optimizer Adam and learning rate of 0.001 (standard recommended)
-optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
-scheduler = ExpLR(optimizer, gamma=0.9)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
 #cross entropy loss because binary wouldn't work for 4 catagories and MSE or RMSE are for regression
 loss_fn = nn.CrossEntropyLoss()
 
@@ -229,7 +231,7 @@ for epoch in range(NUM_Epoch):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        scheduler.step()
+        
 
         #calculate our running loss
         running_train_loss += loss.item() * train_inputs.size(0)
