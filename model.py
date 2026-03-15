@@ -215,11 +215,9 @@ class ConvModel(nn.Module):
     def forward(self,x):
         # after each convolutional layer we pass it through relu and then pool the value
         x = self.relu(self.conv1(x))
-       
         x = self.pool(x)
 
         x = self.relu(self.conv2(x))
-       
         x = self.pool(x)
         
         x = self.relu(self.conv3(x))
