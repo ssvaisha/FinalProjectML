@@ -407,3 +407,5 @@ plt.ylabel("Accuracy")
 plt.title("Validation Accuracy")
 plt.legend()
 plt.show()
+
+print(classification_report(alltest_labels, alltest_preds, target_names=test_dataset.classes))
