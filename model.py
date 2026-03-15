@@ -240,172 +240,177 @@ class ConvModel(nn.Module):
 
         return output
 
-model = ConvModel().to(device)
+if __name__ == "__main__":
+    
+    model = ConvModel().to(device)
 
-# after three epochs we notice training loss goes down but validation loss does not indicating overfitting after 3 epochs
-NUM_Epoch = 3
-# we choice optimizer Adam and learning rate of 0.001 (standard recommended)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+    # after three epochs we notice training loss goes down but validation loss does not indicating overfitting after 3 epochs
+    NUM_Epoch = 3
+    # optimizer Adam and learning rate of 0.001 (standard recommended)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# cross entropy loss because binary wouldn't work for 4 catagories and MSE or RMSE are for regression
-loss_fn = nn.CrossEntropyLoss()
+    #cross entropy loss because binary wouldn't work for 4 catagories and MSE or RMSE are for regression
+    loss_fn = nn.CrossEntropyLoss()
 
-# lists to store results for plotting later
-train_losses = []
-val_losses = []
-val_accuracies = []
+    # lists to store results for plotting later
+    train_losses = []
+    val_losses = []
+    val_accuracies = []
 
-# Training and Validation loop
-# first a for loop to run for all epochs
-for epoch in range(NUM_Epoch):
-    # set our model to train
-    model.train()
-    running_train_loss = 0.0
-    train_total = 0
-    # take our inputs and outputs from our data loader 
-    for train_inputs, train_outputs in train_loader:
-        # move batch to gpu/cpu
-        train_inputs = train_inputs.to(device)
-        train_outputs = train_outputs.to(device)
+    #Training and Validation loop
+    # first a for loop to run for all epochs
+    for epoch in range(NUM_Epoch):
+        # set our model to train
+        model.train()
+        running_train_loss = 0.0
+        train_total = 0
+        # take our inputs and outputs from our data loader 
+        for train_inputs, train_outputs in train_loader:
+            # move batch to gpu/cpu
+            train_inputs = train_inputs.to(device)
+            train_outputs = train_outputs.to(device)
 
-        # pass our inputs through the model and get train_prediction outputs
-        train_preds = model(train_inputs)
-        # use our loss funtion to see the error in our prediction
-        loss = loss_fn(train_preds,train_outputs)
+            # pass our inputs through the model and get train_prediction outputs
+            train_preds = model(train_inputs)
+            # use our loss funtion to see the error in our prediction
+            loss = loss_fn(train_preds,train_outputs)
 
-        # this is the learning step our optimizer moves around the weights to find better fitting patterns
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            # this is the learning step our optimizer moves around the weights to find better fitting patterns
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
         
-        #c alculate our running loss
-        running_train_loss += loss.item() * train_inputs.size(0)
-        train_total += train_inputs.size(0)
+            # calculate our running loss
+            running_train_loss += loss.item() * train_inputs.size(0)
+            train_total += train_inputs.size(0)
 
-    # this is the average training loss across all training examples
-    avg_train_loss = running_train_loss / train_total
-    train_losses.append(avg_train_loss) 
+        # this is the average training loss across all training examples
+        avg_train_loss = running_train_loss / train_total
+        train_losses.append(avg_train_loss) 
 
-    # Validation
+        # Validation
+        model.eval()
+        correct = 0
+        total = 0
+        running_val_loss = 0.0
+
+        with torch.no_grad():
+            for val_inputs, val_outputs in val_loader:
+                # move validation batch to gpu/cpu
+                val_inputs = val_inputs.to(device)
+                val_outputs = val_outputs.to(device)
+
+                val_preds = model(val_inputs)
+
+                # calculating validation loss
+                loss = loss_fn(val_preds, val_outputs)
+                running_val_loss += loss.item() * val_inputs.size(0)
+
+                max_value, predicted = torch.max(val_preds,1)
+
+                total += val_outputs.size(0)
+                correct += (predicted == val_outputs).sum().item()
+    
+        # this is validation accuracy
+        val_accuracy = correct/total
+
+        # average validation loss
+        avg_val_loss = running_val_loss / total
+
+        # we are storing these values for graphing
+        val_losses.append(avg_val_loss)
+        val_accuracies.append(val_accuracy)
+
+        # print results for this epoch
+        print(f"Epoch {epoch} Train Loss: {avg_train_loss}")
+        print(f"Epoch {epoch} Validation Loss: {avg_val_loss}")
+        print(f"Epoch {epoch} Validation Accuracy: {val_accuracy}")
+
+    # Testing
+    # after training is complete, we can now evaluate on unseen test data
     model.eval()
     correct = 0
     total = 0
-    running_val_loss = 0.0
+    test_loss = 0.0
+    # storing all true labels and predictions for f1 score and confusion matrix
+    alltest_labels = []
+    alltest_preds = []
 
     with torch.no_grad():
-        for val_inputs, val_outputs in val_loader:
+        for test_inputs, test_outputs in test_loader:
+            # move test batch to gpu/cpu
+            test_inputs = test_inputs.to(device)
+            test_outputs = test_outputs.to(device)
+
             # move validation batch to gpu/cpu
-            val_inputs = val_inputs.to(device)
-            val_outputs = val_outputs.to(device)
+            test_preds = model(test_inputs)
 
-            val_preds = model(val_inputs)
+            # calculating loss on this test batch
+            loss = loss_fn(test_preds, test_outputs)
+            test_loss += loss.item() * test_inputs.size(0)
 
-            # calculating validation loss
-            loss = loss_fn(val_preds, val_outputs)
-            running_val_loss += loss.item() * val_inputs.size(0)
+            max_value, predicted = torch.max(test_preds,1)
+            total += test_outputs.size(0)
+            correct += (predicted == test_outputs).sum().item()
 
-            max_value, predicted = torch.max(val_preds,1)
+            # we are saving all these labels and predictions
+            alltest_labels.extend(test_outputs.cpu().tolist())
+            alltest_preds.extend(predicted.cpu().tolist())
 
-            total += val_outputs.size(0)
-            correct += (predicted == val_outputs).sum().item()
-    
-    # this is validation accuracy
-    val_accuracy = correct/total
+    test_accuracy = correct / total # test accuracy 
+    avgtest_loss = test_loss / total
+    test_f1 = f1_score(alltest_labels, alltest_preds, average="weighted")
 
-    # average validation loss
-    avg_val_loss = running_val_loss / total
+    print(f"Test Accuracy: {test_accuracy}")
+    print(f"Test Loss: {avgtest_loss}")
+    print(f"Weighted F1 Score: {test_f1}")
 
-    # we are storing these values for graphing
-    val_losses.append(avg_val_loss)
-    val_accuracies.append(val_accuracy)
+    # confusion matrix shows how many examples from each true class were predicted as each class
+    cm = confusion_matrix(alltest_labels, alltest_preds)
+    vt = np.array(cm)
+    print(vt)
 
-    # print results for this epoch
-    print(f"Epoch {epoch} Train Loss: {avg_train_loss}")
-    print(f"Epoch {epoch} Validation Loss: {avg_val_loss}")
-    print(f"Epoch {epoch} Validation Accuracy: {val_accuracy}")
+    classes = ["COVID19","NORMAL","PNEUMONIA","TUBERCULOSIS"]
 
-# Testing
-# after training is complete, we can now evaluate on unseen test data
-model.eval()
-correct = 0
-total = 0
-test_loss = 0.0
-# storing all true labels and predictions for f1 score and confusion matrix
-alltest_labels = []
-alltest_preds = []
+    # calculating precision and recall for each class
+    for i, label in enumerate(classes):
+        tp = vt[i,i]
+        fp = vt[:,i].sum()-tp
+        fn = vt[i,:].sum()-tp
 
-with torch.no_grad():
-    for test_inputs, test_outputs in test_loader:
-        # move test batch to gpu/cpu
-        test_inputs = test_inputs.to(device)
-        test_outputs = test_outputs.to(device)
+        precision = tp/(tp+fp)
+        recall = tp/(tp+fn)
 
-        # move validation batch to gpu/cpu
-        test_preds = model(test_inputs)
+        print(f"{label}: Precision: {precision} | Recall: {recall}")
 
-        # calculating loss on this test batch
-        loss = loss_fn(test_preds, test_outputs)
-        test_loss += loss.item() * test_inputs.size(0)
+    # plotting confusion matrix 
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=test_dataset.classes)
+    disp.plot(cmap="Blues", values_format="d")
+    plt.title("Confusion Matrix")
+    plt.show()
 
-        max_value, predicted = torch.max(test_preds,1)
-        total += test_outputs.size(0)
-        correct += (predicted == test_outputs).sum().item()
+    epochs = range(NUM_Epoch)
 
-        # we are saving all these labels and predictions
-        alltest_labels.extend(test_outputs.cpu().tolist())
-        alltest_preds.extend(predicted.cpu().tolist())
+    # plotting training and validation loss
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, train_losses, marker="o", label="Train Loss")
+    plt.plot(epochs, val_losses, marker="o", label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Train and Validation Loss")
+    plt.legend()
+    plt.show()
 
-test_accuracy = correct / total # test accuracy 
-avgtest_loss = test_loss / total
-test_f1 = f1_score(alltest_labels, alltest_preds, average="weighted")
+    #plotting validation accuracy
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, val_accuracies, marker="o", label="Validation Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Validation Accuracy")
+    plt.legend()
+    plt.show()
 
-print(f"Test Accuracy: {test_accuracy}")
-print(f"Test Loss: {avgtest_loss}")
-print(f"Weighted F1 Score: {test_f1}")
+    print(classification_report(alltest_labels, alltest_preds, target_names=test_dataset.classes))
 
-# confusion matrix shows how many examples from each true class were predicted as each class
-cm = confusion_matrix(alltest_labels, alltest_preds)
-vt = np.array(cm)
-print(vt)
-
-classes = ["COVID19","NORMAL","PNEUMONIA","TUBERCULOSIS"]
-
-# calculating precision and recall for each class
-for i, label in enumerate(classes):
-    tp = vt[i,i]
-    fp = vt[:,i].sum()-tp
-    fn = vt[i,:].sum()-tp
-
-    precision = tp/(tp+fp)
-    recall = tp/(tp+fn)
-
-    print(f"{label}: Precision: {precision} | Recall: {recall}")
-
-# plotting confusion matrix 
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=test_dataset.classes)
-disp.plot(cmap="Blues", values_format="d")
-plt.title("Confusion Matrix")
-plt.show()
-
-epochs = range(NUM_Epoch)
-
-# plotting training and validation loss
-plt.figure(figsize=(8, 5))
-plt.plot(epochs, train_losses, marker="o", label="Train Loss")
-plt.plot(epochs, val_losses, marker="o", label="Validation Loss")
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.title("Train and Validation Loss")
-plt.legend()
-plt.show()
-
-# plotting validation accuracy
-plt.figure(figsize=(8, 5))
-plt.plot(epochs, val_accuracies, marker="o", label="Validation Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Validation Accuracy")
-plt.legend()
-plt.show()
-
-print(classification_report(alltest_labels, alltest_preds, target_names=test_dataset.classes))
+    torch.save(model.state_dict(), "model.pth")
+    print("Model saved!")
