@@ -1,0 +1,6 @@
+bigdata/
+archive_smallset/
+*.zip
+*.pth
+wandb/
+__pycache__/
